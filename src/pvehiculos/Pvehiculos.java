@@ -8,11 +8,19 @@ import org.bson.Document;
 
 
 public class Pvehiculos {
+    
+    // Creadas variables globales y static
+    // Quizas necesitemos mas adelante poder acceder a ellas
+    private static MongoClient mongoClient;
+    private static MongoDatabase database;
+    private static MongoCollection<Document> collection;
     public void conexionMongo(){
         // Realizando la conexionn a MongoDb y nuestra collection vendas
-        MongoClient mongoClient = new MongoClient("localhost", 27017);
-        MongoDatabase database = mongoClient.getDatabase("test");
-        MongoCollection<Document> collection = database.getCollection("vendas");
+        // Deberia realizar variables globales o dejarlo así?
+        
+         mongoClient = new MongoClient("localhost", 27017);
+         database = mongoClient.getDatabase("test");
+        collection = database.getCollection("vendas");
         
         
     }
@@ -21,7 +29,7 @@ public class Pvehiculos {
        // Ejercicio DE EXAMEN
         // Se emplean oracle, OBJECTDB Y MONGO
         // Es necesario añadir los drivers de cada uno si no daran error
-        // Realizando las conexiones a Mongo y la base de datos
+       
         
         
     }
