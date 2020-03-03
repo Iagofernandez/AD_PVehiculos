@@ -5,6 +5,12 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import java.sql.Connection;
+
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -38,18 +44,19 @@ public class Pvehiculos {
     UN Objeto de TIPO Clientes
     */
     static Clientes clienteDat;
-    static String nomeCli;
+    static String nomec;
     static int comprasCli;
     static Vehiculos vehiculosDat;
     static String nomveh;
     static int prezoorixe;
     static int anomatricula;
+    static int pf;
     
     
    
     public void conexionMongo(){
         // Realizando la conexionn a MongoDb y nuestra collection vendas
-        
+        // Hay que iniciar una terminal con mongoDB
         
         mongoClient = new MongoClient("localhost", 27017);
         database = mongoClient.getDatabase("test");
@@ -60,7 +67,7 @@ public class Pvehiculos {
     public void desconexionMongo(){
         mongoClient.close();
     }
-    public void mongoDocs(){
+    public void mongoDocs() throws SQLException{
         datosMongo = collection.find();
         
         /*
@@ -70,7 +77,10 @@ public class Pvehiculos {
             id = doc.getDouble("_id");
             dni = doc.getString("dni");
             codveh = doc.getString("codveh");
-            
+            System.out.println("id " + id);
+            System.out.println("dni " + dni);
+            System.out.println("codveh " + codveh);
+        
             
     // Ahora accedemos a objectDB??
             /*
@@ -79,7 +89,7 @@ public class Pvehiculos {
             Se hace referencia directamente a la clase a la que pertenece
             De parametro necesita la unidad Persistence a la que se quiere acceder
             */
-            EntityManagerFactory emf = Persistence.createEntityManagerFactory("$objectdb/db/vehicli.odb");
+            EntityManagerFactory emf = Persistence.createEntityManagerFactory("/home/oracle/objectdb-2.7.5_01/db/vehicli.odb");
             EntityManager em = emf.createEntityManager();
             
             //Sacamso el nombre y compras de los Clientes de la clase Clientes.class
@@ -93,7 +103,7 @@ public class Pvehiculos {
             clienteDat = query.setParameter("value", dni).getSingleResult();
             
             // Esto nos permite almacenar nome y compras de un cliente
-            nomeCli = clienteDat.getNomec();
+            nomec = clienteDat.getNomec();
             comprasCli = clienteDat.getNcompras();
             
             em.getTransaction().commit();
@@ -120,12 +130,46 @@ public class Pvehiculos {
             em.close();
             emf.close();
             
-            
+            if(comprasCli>0){
+                pf = prezoorixe-((2019-anomatricula)*500)-500;
+            }else{
+                pf = prezoorixe -((2019-anomatricula)*500);
+            }
+            System.out.println("Pf " + pf);
+    /*
+            Comenzando con la conexión a ORACLE
+            Necesario iniciar una terminal con Oracle
+           
+            */
+    Connection connection;        
+    String driver = "jdbc:oracle:thin:";
+    String host = "localhost.localdomain";
+    String porto = "1521";
+    String sid = "orcl";
+    String usuario = "hr";
+    String password = "hr";
+    String url = driver + usuario + "/" + password + "@" + host + ":" + porto + ":" + sid;
+    
+    connection = DriverManager.getConnection(url);
+    
+    /*
+    Para insertar usando ? es mejor el PreparedStatement
+    */
+    PreparedStatement pst = connection.prepareStatement("insert into finalveh values(?,?,?,(tipo_vehf(?,?)))");
+    // Aqui es donde se realizan las inserrciones, se usa un sistema de "indices"
+    pst.setDouble(1,id);
+    pst.setString(2,dni);
+    pst.setString(3,nomec);
+    pst.setString(4,nomveh);
+    pst.setInt(5, pf);
+    
+    pst.executeUpdate();
+    connection.close();
         }
         
-    }
+}
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
       Pvehiculos veh = new Pvehiculos();
       
       veh.conexionMongo();
